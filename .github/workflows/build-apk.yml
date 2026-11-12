@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - "91_SPEED_SHOP_WEB.zip"
+      - "**.zip"
       - ".github/workflows/build-apk.yml"
 
 permissions:
@@ -22,7 +22,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -32,15 +32,35 @@ jobs:
 
       - name: Prepare website
         run: |
-          unzip 91_SPEED_SHOP_WEB.zip
-          mkdir -p www
-          cp 91_SPEED_SHOP_WEB/index.html www/index.html
+          ZIP_FILE=$(find . -maxdepth 1 -type f -iname "*.zip" | head -n 1)
+
+          if [ -z "$ZIP_FILE" ]; then
+            echo "ERROR: ZIP website tidak ditemukan"
+            exit 1
+          fi
+
+          echo "Menggunakan file: $ZIP_FILE"
+          mkdir -p extracted www
+          unzip -o "$ZIP_FILE" -d extracted
+
+          HTML_FILE=$(find extracted -type f -name "index.html" | head -n 1)
+
+          if [ -z "$HTML_FILE" ]; then
+            echo "ERROR: index.html tidak ditemukan"
+            exit 1
+          fi
+
+          cp -r "$(dirname "$HTML_FILE")"/. www/
+
+          echo "Website berhasil disiapkan"
+          ls -la www
 
       - name: Setup Capacitor
         run: |
           npm init -y
           npm install @capacitor/core@7 @capacitor/android@7
           npm install --save-dev @capacitor/cli@7
+
           npx cap init "91 SPEED SHOP" "com.ninespeedshop.app" --web-dir www
           npx cap add android
           npx cap sync android
@@ -57,4 +77,3 @@ jobs:
           name: 91-SPEED-SHOP-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
-          
