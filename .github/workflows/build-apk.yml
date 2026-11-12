@@ -24,11 +24,11 @@ jobs:
         with:
           node-version: 22
 
-      - name: Setup Java
+      - name: Setup Java 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 21
 
       - name: Prepare website
         run: |
@@ -65,6 +65,9 @@ jobs:
           npx cap add android
           npx cap sync android
 
+      - name: Verify Java
+        run: java -version
+
       - name: Build APK
         run: |
           cd android
@@ -77,3 +80,4 @@ jobs:
           name: 91-SPEED-SHOP-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+          
